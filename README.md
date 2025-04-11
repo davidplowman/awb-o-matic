@@ -16,7 +16,7 @@ AWB-O-Matic is a tool for capturing images for Auto White Balance (AWB) calibrat
 
 The tool runs only on a Raspberry Pi, where all the required dependencies should already be available. It should be sufficient to clone this repository:
 ```bash
-git clone https://github.com/yourusername/awb-o-matic.git
+git clone https://github.com/davidplowman/awb-o-matic.git
 cd awb-o-matic
 ```
 
