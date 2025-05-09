@@ -153,11 +153,17 @@ class Snapper(QMainWindow):
     def capture_done(self, job):
         self.capture_button.setEnabled(True)
         request = job.get_result()
-        filename = os.path.join(self.output_dir, f"{self.user},{self.sensor},{self.scene_id:05d}")
+        while True:
+            filename = os.path.join(self.output_dir, f"{self.user},{self.sensor},{self.scene_id:05d}")
+            if not os.path.exists(filename + ".jpg"):
+                break
+            self.scene_id += 1
+            self.scene_id_value.setText(f"{self.scene_id:05d}")
         request.save('main', filename + ".jpg")
         request.save_dng(filename + ".dng")
         print("Capture done", request)
         request.release()
+        print("Files saved as", filename + ".jpg and", filename + ".dng")
 
         # Increment scene ID and update display
         self.scene_id += 1

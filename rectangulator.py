@@ -11,11 +11,9 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                             QMessageBox, QListWidget, QSplitter, QSizePolicy, QListWidgetItem)
 from PyQt5.QtGui import QPixmap, QWheelEvent, QPainter, QPalette, QPen, QColor, QImage
 from PyQt5.QtCore import Qt, QPoint, QRect
-from picamera2 import Picamera2, Preview
-from picamera2.previews.qt import QGlPicamera2, QPicamera2
 
 # You can override these here, if you wish, or on the command line.
-OUTPUT_DIR = os.path.join(os.path.expanduser("~"), "awb-test")
+OUTPUT_DIR = os.path.join(os.path.expanduser("~"), "awb-images")
 INPUT_DIR = os.path.join(os.path.expanduser("~"), "awb-captures")
 
 class ImageLabel(QLabel):
@@ -268,7 +266,7 @@ class ImageDialog(QDialog):
                             'width': rect.width(),
                             'height': rect.height()
                         }
-                        print(f"Selected rectangle (pixels): {self.selected_rect}")
+                        print(f"Selected rectangle:", self.selected_rect)
                         self.accept_button.setEnabled(True)  # Enable Accept button when valid selection is made
 
                         # Convert backup pixmap to numpy array
@@ -280,12 +278,12 @@ class ImageDialog(QDialog):
                         arr = np.frombuffer(ptr, np.uint8).reshape((height, width, 4))
                         # Convert RGBA to RGB
                         rgb_arr = arr[:, :, :3]
-                        print(f"Image shape: {rgb_arr.shape}")
 
                          # Square the pixel values as a kind of fake gamma correction
                         rgb_float = rgb_arr.astype(np.float32) / 255
                         rgb_float *= rgb_float
 
+                        # Use a middle-of-the-road generic colour correction matrix.
                         ccm = np.transpose(np.array([[1.8, -0.8, 0], [-0.4, 1.8, -0.4], [0, -0.8, 1.8]]))
                         inv_ccm = np.linalg.inv(ccm)
                         rgb_float = rgb_float @ inv_ccm
@@ -296,7 +294,7 @@ class ImageDialog(QDialog):
                         w, h = self.selected_rect['width'], self.selected_rect['height']
                         rect_pixels = rgb_float[y:y+h, x:x+w]
                         avg_rgb = np.mean(rect_pixels, axis=(0, 1)) + 0.001 # Add 0.001 to avoid division by zero
-                        print(f"Average RGB values: R={avg_rgb[2]:.1f}, G={avg_rgb[1]:.1f}, B={avg_rgb[0]:.1f}")
+                        print(f"Average RGB values: R={avg_rgb[2]:.3f}, G={avg_rgb[1]:.3f}, B={avg_rgb[0]:.3f}")
 
                         # Check for saturation
                         if np.any(avg_rgb > 0.85):
