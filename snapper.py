@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                             QDialog, QDialogButtonBox, QScrollArea, QHBoxLayout,
                             QMessageBox)
 from PyQt5.QtGui import QPixmap, QWheelEvent, QPainter, QPalette, QPen, QColor, QImage
-from PyQt5.QtCore import Qt, QPoint, QRect
+from PyQt5.QtCore import Qt, QPoint, QRect, QTimer
 from picamera2 import Picamera2, Preview
 from picamera2.previews.qt import QGlPicamera2, QPicamera2
 
@@ -30,7 +30,7 @@ class Snapper(QMainWindow):
         self.configure_camera(camera)
 
         self.setWindowTitle("AWB Snapper")
-        self.setGeometry(100, 100, 1000, 800)  # Increased main window size
+        self.setGeometry(50, 50, 1000, 800)  # Increased main window size
 
         # Create central widget and layout
         central_widget = QWidget()
@@ -78,26 +78,25 @@ class Snapper(QMainWindow):
 
         layout.addLayout(ev_button_layout)
 
+        hbox_layout = QHBoxLayout()
+
         # Display USER value
         user_label = QLabel(f"User: {user}")
-        layout.addWidget(user_label)
+        hbox_layout.addWidget(user_label)
 
         # Display sensor information
         sensor_label = QLabel(f"Sensor: {self.sensor}")
-        layout.addWidget(sensor_label)
+        hbox_layout.addWidget(sensor_label)
 
         # Add scene ID display
-        scene_id_layout = QHBoxLayout()
-        scene_id_label = QLabel("Scene Id:")
-        scene_id_layout.addWidget(scene_id_label)
-        self.scene_id_value = QLabel(f"{self.scene_id:05d}")
-        scene_id_layout.addWidget(self.scene_id_value)
-        scene_id_layout.addStretch()
-        layout.addLayout(scene_id_layout)
+        self.scene_id_label = QLabel(f"Scene Id: {self.scene_id:05d}")
+        hbox_layout.addWidget(self.scene_id_label)
 
         # Display output directory at the bottom
         output_dir_label = QLabel(f"Output directory: {output_dir}")
-        layout.addWidget(output_dir_label)
+        hbox_layout.addWidget(output_dir_label)
+
+        layout.addLayout(hbox_layout)
 
         bg_colour = self.palette().color(QPalette.Background).getRgb()[:3]
         if ssh_mode:
@@ -107,10 +106,11 @@ class Snapper(QMainWindow):
 
         self.qpicamera2.done_signal.connect(self.capture_done)
 
-        self.qpicamera2.setFixedSize(1024, 768)
+        self.qpicamera2.setFixedSize(768, 512)
         layout.addWidget(self.qpicamera2)
 
         self.picam2.start()
+        self.showMaximized()
 
     def configure_camera(self, camera):
         self.picam2 = Picamera2(camera)
@@ -158,7 +158,7 @@ class Snapper(QMainWindow):
             if not os.path.exists(filename + ".jpg"):
                 break
             self.scene_id += 1
-            self.scene_id_value.setText(f"{self.scene_id:05d}")
+            self.scene_id_label.setText(f"Scene Id: {self.scene_id:05d}")
         request.save('main', filename + ".jpg")
         request.save_dng(filename + ".dng")
         print("Capture done", request)
@@ -167,7 +167,7 @@ class Snapper(QMainWindow):
 
         # Increment scene ID and update display
         self.scene_id += 1
-        self.scene_id_value.setText(f"{self.scene_id:05d}")
+        self.scene_id_label.setText(f"Scene Id: {self.scene_id:05d}")
 
     def is_valid_filename(self, text):
         # List of characters not allowed in filenames
